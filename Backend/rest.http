@@ -1,0 +1,11 @@
+POST http://localhost:8000/api/translate/ HTTP/1.1
+Content-Type: application/json
+
+
+{
+    "in": "Hello, how are you?",
+    "lang": "en-gaa"
+}
+
+###
+GET http://localhost:8000/api/supported-languages/ HTTP/1.1
