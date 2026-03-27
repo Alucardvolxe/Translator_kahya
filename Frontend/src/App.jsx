@@ -408,7 +408,7 @@ function ChevronIcon({ open }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // LanguageDropdown — fully custom dropdown (no native <select>)
 // ─────────────────────────────────────────────────────────────────────────────
-function LanguageDropdown({ value, onChange, disabled, dotColor, ariaLabel }) {
+function LanguageDropdown({ value, onChange, disabled, dotColor, ariaLabel, exclude }) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef(null)
 
@@ -457,7 +457,7 @@ function LanguageDropdown({ value, onChange, disabled, dotColor, ariaLabel }) {
       {/* Options list */}
       {open && (
         <ul className="lang-list" role="listbox" aria-label={ariaLabel}>
-          {LANGUAGES.map((lang) => {
+          {LANGUAGES.filter((lang) => lang !== exclude).map((lang) => {
             const isActive = lang === value
             return (
               <li
@@ -585,6 +585,7 @@ export default function TranslateITApp() {
                   disabled={isLoading}
                   dotColor={GHANA_GREEN}
                   ariaLabel="Select source language"
+                  exclude={targetLang}
                 />
               </div>
 
@@ -620,6 +621,7 @@ export default function TranslateITApp() {
                   disabled={isLoading}
                   dotColor={GHANA_GOLD}
                   ariaLabel="Select target language"
+                  exclude={sourceLang}
                 />
 
                 {/* Divider + copy button — right side */}
