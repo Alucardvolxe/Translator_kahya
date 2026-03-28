@@ -3,8 +3,8 @@ Content-Type: application/json
 
 
 {
-    "in": "Hello, how are you?",
-    "lang": "en-gaa"
+    "in": "Miŋa bo, te oyɔɔ tɛŋŋ",
+    "lang": "gaa-tw"
 }
 
 ###
