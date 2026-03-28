@@ -1,0 +1,17 @@
+# Render Blueprint (optional): connect repo → New Blueprint → paste this file.
+# Add a Postgres database in the dashboard and set DATABASE_URL on the web service if not linked automatically.
+services:
+  - type: web
+    name: translator-backend
+    runtime: python
+    rootDir: Backend
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate --no-input
+    startCommand: gunicorn translator_Project.wsgi:application --bind 0.0.0.0:$PORT --workers 2
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: DEBUG
+        value: "False"
+      - key: USE_PROXY_SSL_HEADER
+        value: "true"
+      # Set the rest in the dashboard (SECRET_KEY, ALLOWED_HOSTS, API_*, DATABASE_URL, CORS_ALLOWED_ORIGINS, CSRF_TRUSTED_ORIGINS).
