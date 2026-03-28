@@ -8,28 +8,8 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// API INTEGRATION POINT — the ONLY place a backend developer needs to edit
-// ─────────────────────────────────────────────────────────────────────────────
-//
-// Replace the stub below with a real API call, for example:
-//
-//   const res = await fetch('/api/translate', {
-//     method: 'POST',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify({ text, sourceLang, targetLang }),
-//   })
-//   if (!res.ok) throw new Error('Translation request failed')
-//   return (await res.json()).translation
-//
-// ─────────────────────────────────────────────────────────────────────────────
-async function translateText(text, sourceLang, targetLang) {
-  // TODO: Replace this stub with a real call to POST /api/translate
-  // sourceLang and targetLang are plain-English names e.g. "English", "Twi"
-  await new Promise((res) => setTimeout(res, 1500)) // simulate network delay
-  return 'Ete sɛn?' // hardcoded placeholder — remove when API is wired up
-}
-// ─────────────────────────────────────────────────────────────────────────────
+import { getLangCodeForTarget } from './constants/langCodes.js'
+import { useTranslate } from './hooks/useTranslate.js'
 
 const MAX_CHARS = 500
 
@@ -490,64 +470,52 @@ function LanguageDropdown({ value, onChange, disabled, dotColor, ariaLabel, excl
 
 export default function TranslateITApp() {
   const [inputText,  setInputText]  = useState('')
-  const [outputText, setOutputText] = useState('')
-  const [status,     setStatus]     = useState('idle') // 'idle' | 'loading' | 'success' | 'error'
   const [copied,     setCopied]     = useState(false)
   const [sourceLang, setSourceLang] = useState('English')
   const [targetLang, setTargetLang] = useState('Twi')
+
+  const { translation, isLoading, error, translate, reset } = useTranslate()
 
   // ── Language change — clear any existing translation ────────────────────
 
   const handleSourceLangChange = useCallback((lang) => {
     setSourceLang(lang)
-    setStatus('idle')
-    setOutputText('')
-  }, [])
+    reset()
+  }, [reset])
 
   const handleTargetLangChange = useCallback((lang) => {
     setTargetLang(lang)
-    setStatus('idle')
-    setOutputText('')
-  }, [])
+    reset()
+  }, [reset])
 
   // ── Input / translate / copy ─────────────────────────────────────────────
 
   const handleInputChange = useCallback((e) => {
     const val = e.target.value.slice(0, MAX_CHARS)
     setInputText(val)
-    if (status === 'success' || status === 'error') {
-      setStatus('idle')
-      setOutputText('')
+    if (translation || error) {
+      reset()
     }
-  }, [status])
+  }, [translation, error, reset])
 
   const handleTranslate = useCallback(async () => {
-    if (!inputText.trim() || status === 'loading') return
-    setStatus('loading')
-    setOutputText('')
-    try {
-      const result = await translateText(inputText.trim(), sourceLang, targetLang)
-      setOutputText(result)
-      setStatus('success')
-    } catch {
-      setStatus('error')
-      setOutputText('')
-    }
-  }, [inputText, sourceLang, targetLang, status])
+    if (!inputText.trim() || isLoading) return
+    const langCode = getLangCodeForTarget(targetLang)
+    await translate({ text: inputText.trim(), langCode })
+  }, [inputText, targetLang, isLoading, translate])
 
   const handleCopy = useCallback(() => {
-    if (!outputText || copied) return
-    navigator.clipboard.writeText(outputText).then(() => {
+    if (!translation || copied) return
+    navigator.clipboard.writeText(translation).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
-  }, [outputText, copied])
+  }, [translation, copied])
 
   // ── Derived ──────────────────────────────────────────────────────────────
 
-  const isLoading    = status === 'loading'
-  const isError      = status === 'error'
-  const isSuccess    = status === 'success'
+  const isError      = error != null
+  const isSuccess    = !isLoading && !isError && translation.length > 0
   const canTranslate = inputText.trim().length > 0 && !isLoading
   const charPct      = Math.min((inputText.length / MAX_CHARS) * 100, 100)
   const charWarning  = inputText.length >= MAX_CHARS * 0.9
@@ -630,7 +598,7 @@ export default function TranslateITApp() {
                   <button
                     className={`copy-btn${copied ? ' copy-btn--copied' : ''}`}
                     onClick={handleCopy}
-                    disabled={!isSuccess || !outputText}
+                    disabled={!isSuccess || !translation}
                     aria-label={copied ? 'Copied!' : 'Copy translation'}
                   >
                     {copied ? <CheckIcon /> : <CopyIcon />}
@@ -649,7 +617,7 @@ export default function TranslateITApp() {
                 <textarea
                   className="kasa-textarea"
                   placeholder={`${targetLang} translation will appear here…`}
-                  value={outputText}
+                  value={translation}
                   readOnly
                   aria-label={`${targetLang} translation output`}
                   aria-live="polite"
@@ -677,7 +645,7 @@ export default function TranslateITApp() {
           >
             <div className="error-inner">
               <span role="img" aria-label="Warning">⚠️</span>
-              <span>Translation failed. Please check your connection and try again.</span>
+              <span>{error ?? 'Translation failed. Please check your connection and try again.'}</span>
             </div>
           </div>
         </main>
