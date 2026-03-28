@@ -41,9 +41,17 @@ PRIMARY_API_KEY = config('PRIMARY_API_KEY')
 SECONDARY_API_KEY = config('SECONDARY_API_KEY')
 API_SUPPORTED_LANGUAGES_URL = config('API_SUPPORTED_LANGUAGES_URL')
 
+# CORS (browser requests from Vite / other SPA origins)
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:5173,http://127.0.0.1:5173',
+    cast=Csv(),
+)
+
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -57,6 +65,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
