@@ -9,8 +9,13 @@ requests = "*"
 djangorestframework = "*"
 python-decouple = "*"
 drf-spectacular = "*"
+django-cors-headers = "*"
+gunicorn = "*"
+whitenoise = "*"
+dj-database-url = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.13"
+python_version = "3.12"
