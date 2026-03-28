@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from urllib.parse import urlparse
 
 import dj_database_url
 from decouple import AutoConfig, Csv
@@ -24,14 +25,33 @@ SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = config(
-    'ALLOWED_HOSTS',
-    default='localhost,127.0.0.1',
-    cast=Csv(),
+ALLOWED_HOSTS = list(
+    config(
+        'ALLOWED_HOSTS',
+        default='localhost,127.0.0.1',
+        cast=Csv(),
+    )
 )
 
-if config('USE_PROXY_SSL_HEADER', default=False, cast=bool):
+_render_url = config('RENDER_EXTERNAL_URL', default='').strip()
+_use_proxy = config('USE_PROXY_SSL_HEADER', default=False, cast=bool)
+# Behind Render (RENDER_EXTERNAL_URL is set) or other TLS-terminating proxies.
+if _use_proxy or _render_url:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    USE_X_FORWARDED_HOST = True
+
+# Render injects RENDER_EXTERNAL_URL (e.g. https://my-service.onrender.com) — add that host automatically.
+if _render_url:
+    _host = urlparse(_render_url).hostname
+    if _host and _host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_host)
+    if _host and _host.endswith('.onrender.com') and '.onrender.com' not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append('.onrender.com')
+
+# Health checks often hit 127.0.0.1 with Host: 127.0.0.1
+for _loopback in ('127.0.0.1', 'localhost'):
+    if _loopback not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_loopback)
 
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',

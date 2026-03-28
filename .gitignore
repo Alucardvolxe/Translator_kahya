@@ -1,3 +1,5 @@
 .env
+Backend/.env
+Frontend/.env
 **/staticfiles/
 Backend/db.sqlite3
