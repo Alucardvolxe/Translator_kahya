@@ -23,7 +23,7 @@ def _text_from_translation_payload(payload):
                 return val if isinstance(val, str) else str(val)
         if len(payload) == 1:
             val = next(iter(payload.values()))
-            return val if isinstance(val, str) else str(val)
+            return val if isinstance(val, str) else str(val) 
     return str(payload)
 
 @extend_schema(
@@ -97,3 +97,6 @@ def translate_text(request):
             return Response({'error': 'Translation failed', 'detail': str(e)}, status=502)
 
     return Response({'error': 'Both API keys failed', 'detail': str(last_error)}, status=502)
+
+
+    
